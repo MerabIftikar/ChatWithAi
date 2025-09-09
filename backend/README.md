@@ -1,150 +1,89 @@
-Here’s a complete README.md for your backend project. I’ve written it step by step so even a beginner (or a "child" 😅) can follow and make it work perfectly.
-
-🎥 Video Downloader Backend (Node.js + yt-dlp)
-
-This is a simple backend server built with Express.js that allows you to download videos from websites (like YouTube) using yt-dlp.
-The videos are stored in a local videos/ folder and can be accessed directly in the browser.
+This is a simple Node.js + Express backend that connects to Google Gemini AI (via API key from Google AI Studio).
+It provides a single /chat endpoint for sending user messages and receiving AI-generated replies.
 
 🚀 Features
 
-Download videos from any supported site using yt-dlp.
+Simple Express server
 
-Automatically saves videos to the videos/ folder.
+Connects to Google Gemini AI using API Key
 
-Serves downloaded videos at http://your-ip:5000/videos/filename.mp4.
+Accepts user messages via /chat
 
-Simple REST API (/download) for triggering downloads.
+Returns chatbot responses in JSON format
 
-Works on Windows/Linux/Mac (make sure you have yt-dlp installed or included).
+📦 Installation
 
-📦 Requirements
+Clone or create a new project folder.
 
-Node.js
- (v14 or higher recommended)
+Inside the folder, create server.js with the provided code.
 
-yt-dlp
- (already included as yt-dlp.exe in the project folder if on Windows)
+Install dependencies:
 
-Internet connection 😉
+npm init -y
+npm install express cors node-fetch
 
-⚙️ Installation
+🔑 Setup API Key
 
-Clone this repo or copy files
+Go to Google AI Studio
+.
 
-git clone https://github.com/yourusername/video-downloader-backend.git
-cd video-downloader-backend
+Generate your API Key.
 
+Open server.js and replace this line with your key:
 
-Install dependencies
-
-npm install
-
-
-Add yt-dlp
-
-If you are on Windows:
-Place yt-dlp.exe inside the project folder.
-You can download it from: yt-dlp.exe Releases
-
-If you are on Linux/Mac:
-Install globally:
-
-sudo apt install ffmpeg python3
-pip install yt-dlp
-
-
-And change the ytDlpPath in server.js to "yt-dlp" instead of yt-dlp.exe.
+const GEMINI_API_KEY = "YOUR_API_KEY_HERE";
 
 ▶️ Running the Server
 
-Start the server with:
+Start the backend server:
 
 node server.js
 
 
-You should see:
+Server will run at:
 
-Server running on http://localhost:5000
+http://localhost:5000
 
-🌐 API Endpoints
-1. Download Video
+📡 API Endpoints
+POST /chat
 
-URL: POST http://<your-ip>:5000/download
+Send a user message and get a response from the AI.
 
-Headers: Content-Type: application/json
+Request:
+
+POST http://localhost:5000/chat
+Content-Type: application/json
+
 
 Body:
 
 {
-  "url": "https://www.youtube.com/watch?v=example"
+  "message": "Hello AI, how are you?"
 }
 
 
-Response (on success):
+Response:
 
 {
-  "message": "Video downloaded on server",
-  "videoUrl": "http://192.168.1.20:5000/videos/video_1694290445567.mp4"
+  "reply": "Hi! I'm doing great, how about you?"
 }
 
+🛠️ Example with Fetch (Frontend)
+async function sendMessage(message) {
+  const res = await fetch("http://localhost:5000/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message }),
+  });
 
-Response (on error):
-
-{
-  "error": "yt-dlp failed"
+  const data = await res.json();
+  console.log("AI Reply:", data.reply);
 }
 
-2. Access Downloaded Videos
+📌 Notes
 
-All downloaded videos are available at:
+Uses Gemini 1.5 Flash (fast & cheaper).
 
-http://<your-ip>:5000/videos/<file-name>.mp4
+You can change model in server.js:
 
-
-Example:
-
-http://192.168.1.20:5000/videos/video_1694290445567.mp4
-
-📂 Project Structure
-video-downloader-backend/
-│── server.js        # Main backend server
-│── yt-dlp.exe       # yt-dlp binary (for Windows)
-│── videos/          # Folder where downloaded videos are saved
-│── package.json     # Node dependencies
-│── README.md        # Project documentation
-
-🛠 Troubleshooting
-
-yt-dlp not found error
-→ Make sure yt-dlp.exe is in the same folder OR install yt-dlp globally.
-
-Permission denied (Linux/Mac)
-→ Run chmod +x yt-dlp to make it executable.
-
-Server works but no download
-→ Ensure ffmpeg is installed (needed for merging video/audio):
-
-sudo apt install ffmpeg
-
-👦 Example (Step by Step for Beginners)
-
-Open Command Prompt/Terminal.
-
-Run:
-
-node server.js
-
-
-Open Postman/Insomnia OR a simple frontend and send a POST request:
-
-{ "url": "https://www.youtube.com/watch?v=abc123" }
-
-
-Wait until "Download finished on server!" appears in terminal.
-
-Open browser and go to:
-
-http://localhost:5000/videos/yourvideo.mp4
-
-
-🎉 Your video is ready!
+const MODEL_NAME = "gemini-1.5-pro"; // more advanced
