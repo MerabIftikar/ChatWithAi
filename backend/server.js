@@ -1,63 +1,52 @@
 const express = require("express");
 const cors = require("cors");
-const { spawn } = require("child_process");
-const path = require("path");
-const fs = require("fs");
+
+// node-fetch dynamic import fix
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ====== VIDEO DOWNLOAD PART ======
-const videosDirectory = path.join(__dirname, "videos");
+// ====== CHATBOT PART ======
+// 👉 Replace with your API key from Google AI Studio
+const GEMINI_API_KEY = "YOUR_API_KEY_HERE";
 
-// Make videos folder if not exist
-if (!fs.existsSync(videosDirectory)) {
-  fs.mkdirSync(videosDirectory);
-}
+app.post("/chat", async (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: "Message required" });
 
-// Serve videos in browser
-app.use("/videos", express.static(videosDirectory));
+  try {
+    const MODEL_NAME = "gemini-1.5-flash"; // fast + cheaper
+    const API_VERSION = "v1beta";
 
-app.post("/download", (req, res) => {
-  const { url } = req.body;
-  if (!url) return res.status(400).json({ error: "URL required" });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/${API_VERSION}/models/${MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: message }] }],
+        }),
+      }
+    );
 
-  const fileName = `video_${Date.now()}.mp4`;
-  const outputFile = path.join(videosDirectory, fileName);
+    const data = await response.json();
+    console.log("Gemini Response:", data);
 
-  // Path of yt-dlp.exe (must be inside project folder)
-  const ytDlpPath = path.join(__dirname, "yt-dlp.exe");
+    const reply =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "🤖 Sorry, no response from AI";
 
-  const ytdlp = spawn(ytDlpPath, [
-    "-f",
-    'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]',
-    url,
-    "-o",
-    outputFile,
-  ]);
-
-  ytdlp.stdout.on("data", (data) => {
-    console.log(`yt-dlp: ${data}`);
-  });
-
-  ytdlp.stderr.on("data", (data) => {
-    console.error(`yt-dlp error: ${data}`);
-  });
-
-  ytdlp.on("close", (code) => {
-    if (code === 0) {
-      console.log("Download finished on server!");
-      const videoUrl = `http://192.168.1.20:5000/videos/${fileName}`;
-      res.status(200).json({ message: "Video downloaded on server", videoUrl });
-    } else {
-      console.error(`yt-dlp failed with code ${code}`);
-      res.status(500).json({ error: "yt-dlp failed" });
-    }
-  });
+    res.json({ reply });
+  } catch (error) {
+    console.error("Gemini API error:", error);
+    res.status(500).json({ error: "Failed to connect to Gemini API" });
+  }
 });
 
 // ====== START SERVER ======
 app.listen(5000, () =>
-  console.log(" Server running on http://localhost:5000")
+  console.log("🚀 Chatbot server running on http://localhost:5000")
 );
