@@ -1,127 +1,100 @@
-# video-downloader-app
-React Native + Node.js app to download videos using yt-dlp
-📱 Online Video Downloader – Frontend
+📱 Chat App – Frontend (React Native CLI)
 
-This is the frontend (mobile app) of the Online Video Downloader project.
-It is made with React Native.
-This app lets you paste a video link and download it to your phone.
+This is the frontend of a simple chat application built with React Native (CLI setup).
+The app lets users send a message and receive an AI-generated reply (via backend API).
 
 ✨ Features
 
-Paste a video link and click Download
+📩 Send messages from mobile app
 
-Show download progress in notification bar
+🤖 Get AI response from backend
 
-Save video in Downloads/videos folder
+🎨 Simple & modern chat UI
 
-Works on Android phones
+📱 Works on Android (and iOS if configured)
 
-📂 Files in Frontend
-frontend/
-│
-├── VideoDownloader.tsx   → Main screen of app
-├── package.json          → List of dependencies (libraries)
-└── README.md             → This help file
+📦 Dependencies
 
-⚙️ Setup Steps
+This project uses the following main libraries:
 
-Follow these steps one by one:
+React Native
+ – Mobile framework
 
-1️⃣ Install Node Modules
+Axios
+ – For API requests
 
-Open terminal inside frontend/ and run:
+⚙️ Requirements
 
+Before running this project, make sure you have:
+
+✅ Node.js (v18+ recommended) → Download
+
+✅ React Native CLI installed → Guide
+
+✅ Android Studio (for emulator) OR a real Android phone with USB debugging enabled
+
+✅ Backend server running on your computer (Node.js Express app on port 5000)
+
+⚠️ Important: In ChatScreen.tsx, update the backend API link:
+
+const res = await axios.post("http://192.168.1.20:5000/chat", { message: input });
+
+
+Replace 192.168.1.20 with your computer’s local IP (find it with ipconfig on Windows or ifconfig on Mac/Linux).
+This allows your phone/emulator to communicate with the backend.
+
+🚀 Installation & Setup
+1️⃣ Clone the Repo
+git clone https://github.com/YourUsername/chat-app.git
+cd chat-app/frontend
+
+2️⃣ Install Dependencies
 npm install
 
-
-This will install all required libraries.
-
-2️⃣ Install Extra Libraries
-
-Run these commands:
-
-npm install react-native-fs @notifee/react-native
-npm install @react-navigation/native @react-navigation/stack
-npm install react-native-screens react-native-safe-area-context
+3️⃣ Run on Android Emulator
+npx react-native run-android
 
 
-If you are using Expo:
+Or, if using a real device (USB debugging enabled):
 
-expo install react-native-fs
-expo install @notifee/react-native
-
-3️⃣ Give Storage Permission (Android)
-
-Open this file:
-
-android/app/src/main/AndroidManifest.xml
+npx react-native start
 
 
-Add these lines inside:
+and then run the app manually from Android Studio or your device.
 
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+📂 Project Structure
+frontend/
+│── ChatScreen.tsx   # Main chat UI & logic
+│── package.json     # Dependencies list
+│── README.md        # Documentation (this file)
 
+🔑 API Details
 
-This allows the app to save videos on your phone.
+The frontend communicates with backend using:
 
-4️⃣ Add Notification Icon
+Endpoint: POST /chat
 
-Go to:
+Request Body:
 
-android/app/src/main/res/drawable/
-
-
-Put one icon file named:
-
-ic_launcher.png
-
-
-This icon will show in notifications.
-
-▶️ How to Run
-
-Start Metro bundler:
-
-npm start
+{
+  "message": "Hello AI!"
+}
 
 
-Run app on Android:
+Response:
 
-npm run android
+{
+  "reply": "This is AI reply to: Hello AI!"
+}
 
-🔔 How the App Works
+🛠️ Notes
 
-User writes or pastes a video link.
+Backend server must be running before you use the app.
 
-App sends this link to backend server.
+If backend is off, you will see the error message:
 
-Backend server gives a downloadable video URL.
+Error connecting to server
 
-App downloads video with react-native-fs.
+📜 License
 
-Notifee notification shows progress (e.g., 10%, 50%, 100%).
-
-When complete → shows Download Complete message.
-
-📦 Used Libraries
-
-react-native-fs → For saving video in phone storage.
-
-@notifee/react-native → For showing notifications.
-
-@react-navigation/native → For navigation between screens.
-
-@react-navigation/stack → For stack navigation.
-
-react-native-screens + react-native-safe-area-context → Needed for navigation.
-
-⚠️ Important Notes
-
-Works only on real Android phone, not emulator.
-
-Backend must be running (you will set it later).
-
-Change backend IP in VideoDownloader.tsx to your computer IP. Example:
-
-const backendResponse = await fetch("http://192.168.1.20:5000/download", { ... });
+This project is for learning purposes. Free to use and modify.
