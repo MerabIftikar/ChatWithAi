@@ -1,134 +1,81 @@
-import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, Platform, PermissionsAndroid } from 'react-native';
-import RNFS from 'react-native-fs';
-import NavKeys, { NavigationProp } from '../../navigation/NavKeys';
-import notifee, { AndroidImportance } from '@notifee/react-native';
+import React, { useState, useRef } from "react";
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import axios from "axios";
 
-export default function DownloadVideoScreen() {
-  const [url, setUrl] = useState('');
-  const navigation = useNavigation<NavigationProp>();
-  const DOWNLOAD_NOTIFICATION_ID = 'download_progress';
-  const DOWNLOAD_CHANNEL_ID = 'download';
+// Define a type for each message
+type Message = {
+  id: string;
+  text: string;
+  sender: "user" | "ai";
+};
 
-  const createDownloadChannel = async () => {
-    return await notifee.createChannel({
-      id: DOWNLOAD_CHANNEL_ID,
-      name: 'Download Notifications',
-      importance: AndroidImportance.LOW,
-    });
-  };
+const ChatScreen = () => {
+  const [messages, setMessages] = useState<Message[]>([]); // <-- Add type here
+  const [input, setInput] = useState("");
+  const flatListRef = useRef<FlatList<Message>>(null);
 
-  const requestPermission = async () => {
-    if (Platform.OS === 'android') {
-      const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    }
-    return true;
-  };
+  const sendMessage = async () => {
+    if (!input.trim()) return;
 
-  const showProgressNotification = async (percent: number = 0, indeterminate: boolean = false) => {
-    await createDownloadChannel();
-    await notifee.displayNotification({
-      id: DOWNLOAD_NOTIFICATION_ID,
-      title: 'Downloading Video',
-      body: indeterminate ? 'Downloading...' : `${percent}% completed`,
-      android: {
-        channelId: DOWNLOAD_CHANNEL_ID,
-        progress: { max: 100, current: percent, indeterminate },
-        ongoing: true,
-        smallIcon: 'ic_launcher',
-      },
-    });
-  };
+    const userMessage: Message = { id: Date.now().toString(), text: input, sender: "user" };
+    setMessages(prev => [...prev, userMessage]); // Works now
+    setInput("");
 
-  const showCompleteNotification = async (filePath: string) => {
-    await createDownloadChannel();
-    await notifee.cancelNotification(DOWNLOAD_NOTIFICATION_ID);
-    await notifee.displayNotification({
-      title: 'Download Complete',
-      body: `${filePath.substring(filePath.lastIndexOf('/') + 1)}`,
-      android: { channelId: DOWNLOAD_CHANNEL_ID, smallIcon: 'ic_launcher', autoCancel: true },
-    });
-  };
-
-  const showErrorNotification = async (errorMessage: string) => {
-    await createDownloadChannel();
-    await notifee.cancelNotification(DOWNLOAD_NOTIFICATION_ID);
-    await notifee.displayNotification({
-      title: 'Download Failed',
-      body: `Error: ${errorMessage}`,
-      android: { channelId: DOWNLOAD_CHANNEL_ID, smallIcon: 'ic_launcher', autoCancel: true },
-    });
-  };
-
-  const downloadVideo = async () => {
-    if (!url) {
-      Alert.alert('Invalid URL', 'Please enter a video URL.');
-      return;
-    }
     try {
-      const hasPermission = await requestPermission();
-      if (!hasPermission) {
-        Alert.alert('Permission Denied', 'Cannot download without storage permission.');
-        return;
-      }
-      showProgressNotification(0, true);
-
-      const backendResponse = await fetch('http://192.168.1.20:5000/download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      });
-      if (!backendResponse.ok) {
-        const errorData = await backendResponse.json();
-        throw new Error(errorData.error || 'Server failed to download');
-      }
-      const { videoUrl } = await backendResponse.json();
-
-      const folderPath = `${RNFS.DownloadDirectoryPath}/videos`;
-      const exists = await RNFS.exists(folderPath);
-      if (!exists) await RNFS.mkdir(folderPath);
-
-      const fileName = videoUrl.substring(videoUrl.lastIndexOf('/') + 1);
-      const filePath = `${folderPath}/${fileName}`;
-
-      const { promise } = RNFS.downloadFile({
-        fromUrl: videoUrl,
-        toFile: filePath,
-        progress: (res) => {
-          if (res.contentLength > 0) {
-            const percent = Math.floor((res.bytesWritten / res.contentLength) * 100);
-            showProgressNotification(percent, false);
-          } else {
-            showProgressNotification(0, true);
-          }
-        },
-      });
-
-      await promise;
-      if (Platform.OS === 'android') await RNFS.scanFile(filePath);
-      await showCompleteNotification(filePath);
-      Alert.alert('Download Complete', `Saved at:\n${filePath}`);
-      navigation.navigate(NavKeys.ChatScreen);
-    } catch (err) {
-      const errorMessage = (err instanceof Error) ? err.message : String(err);
-      Alert.alert('Error', errorMessage);
-      showErrorNotification(errorMessage);
+      const res = await axios.post("http://192.168.1.20:5000/chat", { message: input });
+      const aiMessage: Message = { id: Date.now().toString(), text: res.data.reply, sender: "ai" };
+      setMessages(prev => [...prev, aiMessage]); // Works now
+    } catch (error) {
+      const errorMessage: Message = { id: Date.now().toString(), text: "Error connecting to server", sender: "ai" };
+      setMessages(prev => [...prev, errorMessage]);
+      console.error(error);
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Download Video</Text>
-      <TextInput style={styles.input} value={url} onChangeText={setUrl} placeholder="Paste Video URL" />
-      <Button title="Download" onPress={downloadVideo} />
+  const renderItem = ({ item }: { item: Message }) => (
+    <View style={[styles.messageContainer, item.sender === "user" ? styles.userMessage : styles.aiMessage]}>
+      <Text style={item.sender === "user" ? styles.userText : styles.aiText}>{item.text}</Text>
     </View>
   );
-}
+
+  return (
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.container}>
+      <FlatList
+        ref={flatListRef}
+        data={messages}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={{ padding: 10 }}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+      />
+
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          value={input}
+          onChangeText={setInput}
+          placeholder="Type your message..."
+        />
+        <TouchableOpacity style={styles.button} onPress={sendMessage}>
+          <Text style={styles.buttonText}>Send</Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
+  );
+};
+
+export default ChatScreen;
+
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ccc', padding: 10, marginBottom: 20, borderRadius: 5 },
+  container: { flex: 1, backgroundColor: "#f2f2f2" },
+  messageContainer: { padding: 10, marginVertical: 5, borderRadius: 15, maxWidth: "80%" },
+  userMessage: { alignSelf: "flex-end", backgroundColor: "#4f46e5" },
+  aiMessage: { alignSelf: "flex-start", backgroundColor: "#e5e7eb" },
+  userText: { color: "#fff" },
+  aiText: { color: "#000" },
+  inputContainer: { flexDirection: "row", padding: 10, borderTopWidth: 1, borderColor: "#ccc", backgroundColor: "#fff" },
+  input: { flex: 1, borderWidth: 1, borderColor: "#ccc", borderRadius: 25, paddingHorizontal: 15 },
+  button: { marginLeft: 10, backgroundColor: "#4f46e5", borderRadius: 25, paddingHorizontal: 20, justifyContent: "center" },
+  buttonText: { color: "#fff", fontWeight: "bold" }
 });
