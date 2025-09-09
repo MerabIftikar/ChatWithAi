@@ -1,168 +1,100 @@
-Perfect 👍 You now have:
+🤖 AI Chatbot – Full Project (Frontend + Backend)
 
-Frontend (React Native – bare, not Expo) → uses react-native-fs + notifee for downloads & notifications.
+This project is a simple AI Chatbot built with:
 
-Backend (Node.js + Express + yt-dlp) → handles video download and serves file.
+Backend: Node.js + Express (server that connects to Google Gemini AI)
 
-Here’s the full README docs for your exact setup 👇
+Frontend: React (user chat interface)
 
-📘 Video Downloader App – Documentation
+The chatbot lets a user send a message from the frontend → backend → Gemini AI → and shows the AI’s response back in the chat screen.
 
-This project allows you to download YouTube videos using:
+📖 Overview – How It Works
 
-📱 Frontend (React Native bare project) – For the mobile app
+User types a message in the frontend chat screen.
 
-🖥 Backend (Node.js + Express + yt-dlp) – For downloading and serving videos
+The message is sent to the backend (/chat API).
 
-⚙️ 1. Requirements
+Backend sends the text to Google Gemini AI using an API Key.
 
-Before starting, install these:
+Gemini AI generates a smart response.
 
-✅ Node.js (LTS)
+Backend receives the AI reply and sends it back to the frontend.
 
-✅ npm (comes with Node.js)
+Frontend shows the reply in the chat window.
 
-✅ React Native CLI
+📂 Project Structure
+📦 AI-Chatbot-Project
+ ┣ 📂 backend/   → Node.js + Express server
+ ┃ ┗ server.js  → Connects with Google Gemini API
+ ┣ 📂 frontend/  → React app (chat UI)
+ ┃ ┗ App.js     → Simple chat screen
+ ┗ README.md    → Full documentation
 
-✅ Android Studio
- (for emulator / SDK tools)
+⚙️ Requirements
 
-✅ yt-dlp.exe
- → put in your backend folder
+Node.js installed
 
-✅ Android device or emulator (for testing app)
+npm (comes with Node)
 
-📂 2. Project Structure
-VideoDownloaderApp/
-│
-├── backend/             → Node.js backend
-│   ├── server.js        → Express server
-│   ├── yt-dlp.exe       → Video downloader
-│   └── videos/          → Downloaded videos
-│
-└── frontend/            → React Native app
-    ├── src/screens/DownloadVideoScreen.tsx
-    └── package.json
+Google Gemini API Key (from Google AI Studio
+)
 
-🚀 3. Backend Setup
-Step 1: Create backend project
-mkdir VideoDownloaderApp
-cd VideoDownloaderApp
-mkdir backend
-cd backend
-npm init -y
-npm install express cors
+🚀 Setup Guide
+🔹 Step 1: Backend
 
-Step 2: Add files
+Go inside backend/ folder.
 
-Save your server.js inside backend/.
+Install required packages (express, cors, node-fetch).
 
-Download yt-dlp.exe and put it inside backend/.
+Put your Google Gemini API Key in the backend code.
 
-Step 3: Run backend
-node server.js
+Start backend server → it runs on http://localhost:5000
+.
 
+🔹 Step 2: Frontend
 
-✅ Server will start at: http://localhost:5000
- (or your local IP).
+Go inside frontend/ folder.
 
-📱 4. Frontend Setup
-Step 1: Create React Native project
-npx react-native init frontend
-cd frontend
+Run the React app (npm start).
 
-Step 2: Install required libraries
-npm install react-native-fs @notifee/react-native @react-navigation/native
-npm install react-native-screens react-native-safe-area-context react-native-gesture-handler
+It opens on http://localhost:3000
+.
 
-Step 3: Link native modules
-npx pod-install ios   # if using iOS
+Frontend is connected with backend at port 5000.
 
+🔄 How to Use
 
-(For Android, just rebuild the project.)
+Start backend (node server.js).
 
-Step 4: Add your screen
+Start frontend (npm start).
 
-Place the code you provided (DownloadVideoScreen.tsx) inside:
+Open http://localhost:3000
+ in browser.
 
-frontend/src/screens/DownloadVideoScreen.tsx
+Type a message in the input box.
 
+AI will reply within a few seconds.
 
-Make sure you have navigation set up with NavKeys.ChatScreen.
+📌 Example Conversation
 
-Step 5: Run frontend
-npx react-native run-android
-# or
-npx react-native run-ios
+User: Hello AI!
 
+AI: Hi there 👋 How can I help you today?
 
-✅ App will open in your emulator or real device.
+🧑‍🎓 Notes for Students
 
-🔗 5. How It Works
+Backend = Brain → Talks to Google Gemini AI.
 
-User pastes a YouTube video link in the mobile app.
+Frontend = Face → Shows chat to the user.
 
-App sends API request to backend:
+API Key = Password → Needed to access Gemini AI.
 
-POST http://<your-ip>:5000/download
-Body: { "url": "<youtube-link>" }
+Never put your API Key inside frontend code. Keep it safe in backend.
 
+📝 Summary
 
-Backend uses yt-dlp.exe to download video → saves it as MP4.
+Project is split into two parts (backend + frontend).
 
-Video is saved inside backend/videos/.
+User → Frontend → Backend → AI → Backend → Frontend → User.
 
-Backend responds with a video URL (example: http://192.168.1.20:5000/videos/video_123.mp4).
-
-App downloads that file into phone storage using react-native-fs.
-
-App shows progress notifications (using notifee).
-
-Once complete, app shows “Download Complete” with file path.
-
-📚 6. Libraries Used
-Backend
-
-express → Web server
-
-cors → Allow frontend to connect
-
-yt-dlp.exe → Downloads YouTube videos
-
-Frontend
-
-react-native-fs → Save files to phone storage
-
-@notifee/react-native → Notifications with progress
-
-@react-navigation/native → Screen navigation
-
-react-native-screens, react-native-safe-area-context, react-native-gesture-handler → Required for navigation
-
-✅ 7. Final Steps
-
-Start backend:
-
-cd backend
-node server.js
-
-
-Start frontend:
-
-cd frontend
-npx react-native run-android
-
-
-Paste YouTube URL in app → Press Download.
-
-Video will be downloaded, saved in phone storage, and shown with notification progress.
-
-📌 Summary
-
-Two projects: backend + frontend
-
-Backend handles video download with yt-dlp
-
-Frontend (React Native) handles UI + notifications
-
-Together → you get a Video Downloader App 🚀
+Easy to run with just node server.js + npm start.
